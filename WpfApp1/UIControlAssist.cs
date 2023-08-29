@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
@@ -8,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using UIAutomationClient;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using Point = System.Drawing.Point;
@@ -20,13 +23,14 @@ namespace WpfApp1
         public string ClassName { get; set; }
         public string AutomationId { get; set; }
         public tagRECT rect { get; set; }
-
+        public string RuntimeId { get; set; }
         public int level = 0;
         public List<EleInfo> childs { get; set; }
 
         public IUIAutomationElement root; // 根窗口
         public IUIAutomationElement parent; // 父节点
         public IUIAutomationElement curr; //当前节点
+        public static ConcurrentDictionary<string, EleInfo> map = new ConcurrentDictionary<string, EleInfo>();
         public EleInfo()
         {
             
@@ -40,19 +44,21 @@ namespace WpfApp1
                 ClassName = ele.CurrentClassName;
                 rect = ele.CurrentBoundingRectangle;
                 AutomationId = ele.CurrentAutomationId;
+                RuntimeId = UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId());
                 this.parent = parent;
                 curr = ele;
                 this.level = ++level;
-                if (this.level < 4)
-                {
-                    childs = UIControlAssist.GetAllElementEx(curr, this.level);
-                }
-                else
-                {
-                    // 空元素
-                    childs = new List<EleInfo>() { new EleInfo() };
-                }
-                //childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                //if (this.level < 4)
+                //{
+                //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                //}
+                //else
+                //{
+                //    // 空元素
+                //    childs = new List<EleInfo>() { new EleInfo() };
+                //}
+                childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                map.TryAdd(RuntimeId, this);
             }
             catch(COMException ce) {
             }
@@ -182,6 +188,17 @@ namespace WpfApp1
             return eles;
         }
 
+        public static string GetRuntimeIdStr(Array runtimeId)
+        {
+            string id = string.Empty;
+            int index = 0;
+            while (index <= runtimeId.Length-1)
+            {
+                id += runtimeId.GetValue(index).ToString();
+                index++;
+            }
+            return id;
+        }
         public static List<EleInfo> GetAllElementEx(IUIAutomationElement ele, int level)
         {
             List<EleInfo> eles = new List<EleInfo>();

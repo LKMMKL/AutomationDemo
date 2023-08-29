@@ -36,7 +36,18 @@ namespace WpfApp1
 
             this.DataContext = this;
             list = UIControlAssist.GetAllElement();
-            
+            HightLight.mouseFunc = MouseSelect;
+            //Task.Run(() =>
+            //{
+            //    Thread.Sleep(3000);
+            //    var target = GetTreeViewItemFromObject(this.tree.ItemContainerGenerator, list[2]);
+            //    this.Dispatcher.Invoke(() =>
+            //    {
+            //        target.IsSelected = true;
+            //        target.IsExpanded= true;
+            //    });
+                
+            //});
         }
 
         private void tree_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -49,7 +60,7 @@ namespace WpfApp1
         {
             TreeView treeView = sender as TreeView;
             EleInfo item = (EleInfo)treeView.SelectedItem;
-
+     
             this.eleName.Content = item.Name;
             this.eleClassName.Content = item.ClassName;
             this.eleId.Content = item.AutomationId;
@@ -57,8 +68,43 @@ namespace WpfApp1
             HightLight.DrawHightLight(rect);
         }
 
-       
+        private TreeViewItem GetTreeViewItemFromObject(ItemContainerGenerator container, object tvio)
+        {
+            var item = container.ContainerFromItem(tvio) as TreeViewItem;
+            if (item != null)
+            {
+                return item;
+            }
 
+            for (int i = 0; i < container.Items.Count; i++)
+            {
+                var subContainer = (TreeViewItem)container.ContainerFromIndex(i);
+                if (subContainer != null)
+                {
+                    item = GetTreeViewItemFromObject(subContainer.ItemContainerGenerator, tvio);
+                    if (item != null)
+                    {
+                        return item;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public void MouseSelect(object ele)
+        {
+            var target = GetTreeViewItemFromObject(this.tree.ItemContainerGenerator, ele);
+            if (target != null)
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    target.IsSelected = true;
+                    target.IsExpanded = true;
+                });
+            }
+            
+        }
     }
 
     public class RelayCommand : ICommand

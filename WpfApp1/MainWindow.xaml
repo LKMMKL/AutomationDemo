@@ -13,7 +13,7 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <TreeView x:Name="tree" ItemsSource="{Binding list}" SelectedItemChanged="tree_SelectedItemChanged" HorizontalAlignment="Left" Height="415" Margin="10,0,0,0" VerticalAlignment="Center" Width="280">
+        <TreeView x:Name="tree" ItemsSource="{Binding list}" HorizontalAlignment="Left" Height="415" Margin="10,0,0,0" VerticalAlignment="Center" Width="280">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding childs}">
                     <TextBlock Text="{Binding Name}" MouseLeftButtonDown="tree_MouseLeftButtonDown"/>

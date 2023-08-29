@@ -16,7 +16,7 @@ namespace WpfApp1.Util
     {
         public static Task draw_task;
         public static CancellationTokenSource tokenSource = new CancellationTokenSource();
-        public static Action action;
+        public static Action<object> mouseFunc= null;
         public static void DrawHightLight(tagRECT r)
         {
             if (draw_task != null )
@@ -91,6 +91,9 @@ namespace WpfApp1.Util
                 if (ele != null)
                 {
                     DrawHightLight(ele.CurrentBoundingRectangle);
+                    EleInfo eleinfo;
+                    bool r =EleInfo.map.TryGetValue(UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId()), out eleinfo);
+                    if(r)mouseFunc(eleinfo);
                 }
             }
         }
