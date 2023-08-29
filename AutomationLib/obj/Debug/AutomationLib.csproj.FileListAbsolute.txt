@@ -1,0 +1,11 @@
+C:\Users\12456\source\repos\WpfApp1\AutomationLib\bin\Debug\AutomationLib.dll
+C:\Users\12456\source\repos\WpfApp1\AutomationLib\bin\Debug\AutomationLib.pdb
+C:\Users\12456\source\repos\WpfApp1\AutomationLib\obj\Debug\AutomationLib.csproj.CoreCompileInputs.cache
+C:\Users\12456\source\repos\WpfApp1\AutomationLib\obj\Debug\AutomationLib.dll
+C:\Users\12456\source\repos\WpfApp1\AutomationLib\obj\Debug\AutomationLib.pdb
+C:\Users\lkm\Desktop\WpfApp1\AutomationLib\bin\Debug\AutomationLib.dll
+C:\Users\lkm\Desktop\WpfApp1\AutomationLib\bin\Debug\AutomationLib.pdb
+C:\Users\lkm\Desktop\WpfApp1\AutomationLib\obj\Debug\AutomationLib.csproj.AssemblyReference.cache
+C:\Users\lkm\Desktop\WpfApp1\AutomationLib\obj\Debug\AutomationLib.csproj.CoreCompileInputs.cache
+C:\Users\lkm\Desktop\WpfApp1\AutomationLib\obj\Debug\AutomationLib.dll
+C:\Users\lkm\Desktop\WpfApp1\AutomationLib\obj\Debug\AutomationLib.pdb
