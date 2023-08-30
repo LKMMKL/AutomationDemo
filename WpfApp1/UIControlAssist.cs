@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -17,6 +18,47 @@ using Point = System.Drawing.Point;
 
 namespace WpfApp1
 {
+    public class TimeLimitedTaskScheduler : TaskScheduler
+    {
+        int _TaskCount = 0;
+        Stopwatch _Sw = null;
+        int _MaxTasksPerSecond;
+        public static TaskFactory factory = new TaskFactory(new TimeLimitedTaskScheduler(100));
+        public TimeLimitedTaskScheduler(int maxTasksPerSecond)
+        {
+            _MaxTasksPerSecond = maxTasksPerSecond;
+        }
+
+        protected override void QueueTask(Task task)
+        {
+            if (_TaskCount == 0) _Sw = Stopwatch.StartNew();
+
+            var shouldWait = (1000 / _MaxTasksPerSecond) * _TaskCount - _Sw.ElapsedMilliseconds;
+
+            if (shouldWait < 0)
+            {
+                shouldWait = _TaskCount = 0;
+                _Sw.Restart();
+            }
+
+            Task.Delay((int)shouldWait)
+                .ContinueWith(t => ThreadPool.QueueUserWorkItem((_) => base.TryExecuteTask(task)));
+
+            _TaskCount++;
+        }
+
+        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
+        {
+            return base.TryExecuteTask(task);
+        }
+
+        protected override IEnumerable<Task> GetScheduledTasks()
+        {
+            throw new NotImplementedException();
+        }
+
+
+    }
     public class EleInfo
     {
         public string Name { get; set; }
@@ -31,6 +73,7 @@ namespace WpfApp1
         public IUIAutomationElement parent; // 父节点
         public IUIAutomationElement curr; //当前节点
         public static ConcurrentDictionary<string, EleInfo> map = new ConcurrentDictionary<string, EleInfo>();
+       
         public EleInfo()
         {
             
@@ -57,8 +100,21 @@ namespace WpfApp1
                 //    // 空元素
                 //    childs = new List<EleInfo>() { new EleInfo() };
                 //}
-                childs = UIControlAssist.GetAllElementEx(curr, this.level);
-                map.TryAdd(RuntimeId, this);
+                //TimeLimitedTaskScheduler.factory.StartNew(() =>
+                //{
+                //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                //});
+                Task task = new Task(() =>
+                {
+                    childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                });
+                UIControlAssist.TaskList.Add(task);
+                task.Start();
+                //Task.Run(() =>
+                //{
+                //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                //});
+                //map.TryAdd(RuntimeId, this);
             }
             catch(COMException ce) {
             }
@@ -139,6 +195,7 @@ namespace WpfApp1
         [DllImport("user32")]
         private static extern bool InvalidateRect(IntPtr hwnd, IntPtr rect, bool bErase);
         private static IUIAutomationElement target;
+         public static List<Task> TaskList = new List<Task>();
         [STAThread]
         public static void GetPointTarget(int left, int top)
         {
@@ -173,17 +230,21 @@ namespace WpfApp1
                    uia.CreatePropertyCondition(UIA_PropertyIds.UIA_ControlTypePropertyId,
                     UIA_ControlTypeIds.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
             IUIAutomationElementArray arry = uia.GetRootElement().FindAll(TreeScope.TreeScope_Children, find1_condition);
-            CountdownEvent countdownEvent = new CountdownEvent(arry.Length);
-            for (int i = 0; i < arry.Length; i++)
-            {
-                var index = i;
-                Task.Run(() =>
-                {
-                    eles.Add(new EleInfo(uia.GetRootElement(), arry.GetElement(index)));
-                    countdownEvent.Signal();
-                });
-            }
-            countdownEvent.Wait();
+            //CountdownEvent countdownEvent = new CountdownEvent(arry.Length);
+            eles.Add(new EleInfo(null, uia.GetRootElement(), -1));
+            //for (int i = 0; i < arry.Length; i++)
+            //{
+            //    var index = i;
+
+            //    Task.Run(() =>
+            //    {
+            //        eles.Add(new EleInfo(uia.GetRootElement(), arry.GetElement(index)));
+            //        countdownEvent.Signal();
+
+            //    });
+            //}
+            //countdownEvent.Wait();
+            Task.WaitAll(TaskList.ToArray());
             allEle = eles;
             return eles;
         }

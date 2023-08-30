@@ -30,6 +30,7 @@ namespace WpfApp1
         public static List<EleInfo> list { get; set; }
 
         public static EleInfo currItem { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -37,17 +38,7 @@ namespace WpfApp1
             this.DataContext = this;
             list = UIControlAssist.GetAllElement();
             HightLight.mouseFunc = MouseSelect;
-            //Task.Run(() =>
-            //{
-            //    Thread.Sleep(3000);
-            //    var target = GetTreeViewItemFromObject(this.tree.ItemContainerGenerator, list[2]);
-            //    this.Dispatcher.Invoke(() =>
-            //    {
-            //        target.IsSelected = true;
-            //        target.IsExpanded= true;
-            //    });
-                
-            //});
+           
         }
 
         private void tree_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
