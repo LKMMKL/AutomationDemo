@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -51,12 +52,13 @@ namespace WpfApp1
         {
             TreeView treeView = sender as TreeView;
             EleInfo item = (EleInfo)treeView.SelectedItem;
-     
+            if (item == null) return;
             this.eleName.Content = item.Name;
             this.eleClassName.Content = item.ClassName;
-            this.eleId.Content = item.AutomationId;
-            tagRECT rect = item.curr.CurrentBoundingRectangle;
-            HightLight.DrawHightLight(rect);
+            this.rootId.Content = item.rootId;
+            this.runtimeId.Content = item.RuntimeId;
+            //tagRECT rect = item.curr.CurrentBoundingRectangle;
+            //HightLight.DrawHightLight(rect);
         }
 
         private TreeViewItem GetTreeViewItemFromObject(ItemContainerGenerator container, object tvio)
@@ -69,23 +71,141 @@ namespace WpfApp1
 
             for (int i = 0; i < container.Items.Count; i++)
             {
+
                 var subContainer = (TreeViewItem)container.ContainerFromIndex(i);
+                
                 if (subContainer != null)
                 {
+                    
+                    EleInfo n1 = (EleInfo)subContainer.Header;
+                    if(n1.Name == "\"网易音乐\"")
+                    {
+                        string s = "";
+                    }
+                    if (n1.Name == "网易音乐")
+                    {
+                        string s = "";
+                    }
                     item = GetTreeViewItemFromObject(subContainer.ItemContainerGenerator, tvio);
                     if (item != null)
                     {
                         return item;
                     }
+
                 }
             }
 
             return null;
         }
 
+        private TreeViewItem GetTreeViewItem(ItemsControl container, object item)
+        {
+            if (container != null)
+            {
+                if (container.DataContext == item)
+                {
+                    return container as TreeViewItem;
+                }
+
+                // Expand the current container
+                if (container is TreeViewItem && !((TreeViewItem)container).IsExpanded)
+                {
+                    container.SetValue(TreeViewItem.IsExpandedProperty, true);
+                }
+
+                // Try to generate the ItemsPresenter and the ItemsPanel.
+                // by calling ApplyTemplate.  Note that in the
+                // virtualizing case even if the item is marked
+                // expanded we still need to do this step in order to
+                // regenerate the visuals because they may have been virtualized away.
+
+                container.ApplyTemplate();
+                ItemsPresenter itemsPresenter =
+                    (ItemsPresenter)container.Template.FindName("ItemsHost", container);
+                if (itemsPresenter != null)
+                {
+                    itemsPresenter.ApplyTemplate();
+                }
+                else
+                {
+                    // The Tree template has not named the ItemsPresenter,
+                    // so walk the descendents and find the child.
+                    itemsPresenter = FindVisualChild<ItemsPresenter>(container);
+                    if (itemsPresenter == null)
+                    {
+                        container.UpdateLayout();
+
+                        itemsPresenter = FindVisualChild<ItemsPresenter>(container);
+                    }
+                }
+
+                Panel itemsHostPanel = (Panel)VisualTreeHelper.GetChild(itemsPresenter, 0);
+
+                // Ensure that the generator for this panel has been created.
+                UIElementCollection children = itemsHostPanel.Children;
+
+                for (int i = 0, count = container.Items.Count; i < count; i++)
+                {
+                    TreeViewItem subContainer;
+                    subContainer =
+                            (TreeViewItem)container.ItemContainerGenerator.
+                            ContainerFromIndex(i);
+
+                    // Bring the item into view to maintain the
+                    // same behavior as with a virtualizing panel.
+                    subContainer.BringIntoView();
+
+                    if (subContainer != null)
+                    {
+                        // Search the next level for the object.
+                        TreeViewItem resultContainer = GetTreeViewItem(subContainer, item);
+                        if (resultContainer != null)
+                        {
+                            return resultContainer;
+                        }
+                        else
+                        {
+                            // The object is not under this TreeViewItem
+                            // so collapse it.
+                            subContainer.IsExpanded = false;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+        private T FindVisualChild<T>(Visual visual) where T : Visual
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(visual); i++)
+            {
+                Visual child = (Visual)VisualTreeHelper.GetChild(visual, i);
+                if (child != null)
+                {
+                    T correctlyTyped = child as T;
+                    if (correctlyTyped != null)
+                    {
+                        return correctlyTyped;
+                    }
+
+                    T descendent = FindVisualChild<T>(child);
+                    if (descendent != null)
+                    {
+                        return descendent;
+                    }
+                }
+            }
+
+            return null;
+        }
         public void MouseSelect(object ele)
         {
-            var target = GetTreeViewItemFromObject(this.tree.ItemContainerGenerator, ele);
+            //foreach (var item in tree.Items)
+            //{
+            //    DependencyObject dObject = tree.ItemContainerGenerator.ContainerFromItem(item);
+            //    ((TreeViewItem)dObject).ExpandSubtree();
+            //}
+            var target = GetTreeViewItem(tree, ele);
             if (target != null)
             {
                 this.Dispatcher.Invoke(() =>
@@ -96,27 +216,16 @@ namespace WpfApp1
             }
             
         }
-    }
 
-    public class RelayCommand : ICommand
-    {
-        public event EventHandler CanExecuteChanged;
-
-        private Action mExecute;
-        public event EventHandler canExecuteChanged;
-
-        public RelayCommand(Action execute)
+        private void Refresh(object sender, RoutedEventArgs e)
         {
-            mExecute = execute;
-        }
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-        public void Execute(object parameter)
-        {
-            mExecute?.Invoke();
+            var rootId = ((Button)sender).Tag;
+            list.RemoveAll((ele) => ele.rootId == rootId);
+            
+            var list1 = UIControlAssist.Refresh((string)rootId);
+            tree.ItemsSource = null;
+            tree.ItemsSource= list;
+            //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(list)));
         }
     }
 }

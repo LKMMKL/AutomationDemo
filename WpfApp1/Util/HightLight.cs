@@ -6,9 +6,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using UIAutomationClient;
 using WpfApp1.Constants;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
+using Point = System.Drawing.Point;
 
 namespace WpfApp1.Util
 {
@@ -17,6 +19,7 @@ namespace WpfApp1.Util
         public static Task draw_task;
         public static CancellationTokenSource tokenSource = new CancellationTokenSource();
         public static Action<object> mouseFunc= null;
+        public static bool actionInvoke = false;
         public static void DrawHightLight(tagRECT r)
         {
             if (draw_task != null )
@@ -70,30 +73,36 @@ namespace WpfApp1.Util
             tp.y = point.Y;
             tp.x = point.X;
             // 指针在主窗口内
-            if (false) {
+            if (Application.Current.MainWindow.IsMouseOver) {
             }
             else
             {
-                //List<EleInfo> eles = UIControlAssist.allEle;
-                //if(eles.Count > 0)
-                //{
-                //    for(int i=0;i<eles.Count;i++)
-                //    {
-                //        tagRECT? rect = eles[i].ContainPoint(point);
-                //        if (rect != null) {
-                //            DrawHightLight((tagRECT)rect);
-                //        }
-                //    }
-                //}
-
-                CUIAutomation uia = new CUIAutomation();
-                IUIAutomationElement ele = uia.ElementFromPoint(tp);
-                if (ele != null)
+                if (!actionInvoke)
                 {
-                    DrawHightLight(ele.CurrentBoundingRectangle);
-                    EleInfo eleinfo;
-                    bool r =EleInfo.map.TryGetValue(UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId()), out eleinfo);
-                    if(r)mouseFunc(eleinfo);
+                    try
+                    {
+                        CUIAutomation uia = new CUIAutomation();
+                        IUIAutomationElement ele = uia.ElementFromPoint(tp);
+                        if (ele != null)
+                        {
+                            DrawHightLight(ele.CurrentBoundingRectangle);
+                            EleInfo eleinfo;
+                            bool r = UIControlAssist.map.TryGetValue(UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId()), out eleinfo);
+                            if (r && !actionInvoke)
+                            {
+                                actionInvoke = true;
+                                mouseFunc(eleinfo);
+                                actionInvoke = false;
+                            }
+                        }
+                    }
+                    catch {
+
+                    }
+                    finally {
+                        actionInvoke = false;
+                    }
+                    
                 }
             }
         }
