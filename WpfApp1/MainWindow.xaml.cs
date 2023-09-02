@@ -219,12 +219,43 @@ namespace WpfApp1
 
         private void Refresh(object sender, RoutedEventArgs e)
         {
-            var rootId = ((Button)sender).Tag;
-            list.RemoveAll((ele) => ele.rootId == rootId);
+            var RuntimeId = ((Button)sender).Tag;
+            EleInfo eles = (EleInfo)tree.Items[0];
+            var index = 0;
+           
+            for(int i = 0; i < eles.childs.Count; i++)
+            {
+                index = i;
+                if(eles.childs[i].RuntimeId == RuntimeId)
+                {
+                    
+                    break;
+                }
+
+            }
+            EleInfo target = eles.childs[index];
+            //eles.childs.RemoveAt(index);
+            UIControlAssist.Refresh(target);
+            target = new EleInfo(target.curr,target.curr, 0);
+            if (target.curr != null)
+            {
+                eles.childs[index] = target;
+            }
+            else
+            {
+                eles.childs.RemoveAt(index);
+            }
             
-            var list1 = UIControlAssist.Refresh((string)rootId);
-            tree.ItemsSource = null;
-            tree.ItemsSource= list;
+            //eles.childs.RemoveAll((ele) => ele.RuntimeId == RuntimeId);
+            tree.Items.Refresh();
+            TreeViewItem ti = tree.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem;
+            ti.IsExpanded = true;
+            //list[0].childs.RemoveAll((ele) => ele.rootId == rootId);
+            //tree.ItemsSource = null;
+            //tree.ItemsSource = list;
+            //var list1 = UIControlAssist.Refresh((string)rootId);
+            //tree.ItemsSource = null;
+            //tree.ItemsSource= list;
             //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(list)));
         }
     }

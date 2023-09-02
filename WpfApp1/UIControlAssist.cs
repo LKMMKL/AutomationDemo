@@ -21,47 +21,6 @@ using Point = System.Drawing.Point;
 
 namespace WpfApp1
 {
-    public class TimeLimitedTaskScheduler : TaskScheduler
-    {
-        int _TaskCount = 0;
-        Stopwatch _Sw = null;
-        int _MaxTasksPerSecond;
-        public static TaskFactory factory = new TaskFactory(new TimeLimitedTaskScheduler(100));
-        public TimeLimitedTaskScheduler(int maxTasksPerSecond)
-        {
-            _MaxTasksPerSecond = maxTasksPerSecond;
-        }
-
-        protected override void QueueTask(Task task)
-        {
-            if (_TaskCount == 0) _Sw = Stopwatch.StartNew();
-
-            var shouldWait = (1000 / _MaxTasksPerSecond) * _TaskCount - _Sw.ElapsedMilliseconds;
-
-            if (shouldWait < 0)
-            {
-                shouldWait = _TaskCount = 0;
-                _Sw.Restart();
-            }
-
-            Task.Delay((int)shouldWait)
-                .ContinueWith(t => ThreadPool.QueueUserWorkItem((_) => base.TryExecuteTask(task)));
-
-            _TaskCount++;
-        }
-
-        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
-        {
-            return base.TryExecuteTask(task);
-        }
-
-        protected override IEnumerable<Task> GetScheduledTasks()
-        {
-            throw new NotImplementedException();
-        }
-
-
-    }
     public class EleInfo : INotifyPropertyChanged
     {
         public string Name { get; set; }
@@ -69,7 +28,8 @@ namespace WpfApp1
         public string AutomationId { get; set; }
         public tagRECT rect { get; set; }
         public string RuntimeId { get; set; }
-        public int level = 0;
+        public string rootId;
+        public int level { get; set; }
         public List<EleInfo> childs { get; set; }
         public bool check;
         public bool checkValue {
@@ -102,7 +62,6 @@ namespace WpfApp1
                 showCheckbox = value;
             }
         }
-        public string rootId { get; set; } // 根窗口
         public IUIAutomationElement curr; //当前节点
 
 
@@ -112,28 +71,38 @@ namespace WpfApp1
         {
             
         }
-
-        public EleInfo(IUIAutomationElement root, IUIAutomationElement ele, int level=0)
+        public EleInfo(IUIAutomationElement root, int level = 0)
         {
+            Name = root.CurrentName;
+            ClassName = root.CurrentClassName;
+            rect = root.CurrentBoundingRectangle;
+            AutomationId = root.CurrentAutomationId;
+            RuntimeId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
+            rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
+            curr = root;
+            this.level = ++level;
+        }
+        public EleInfo(IUIAutomationElement root,IUIAutomationElement ele, int level=0)
+         {
             try
-            {
+            {   
                 Name = ele.CurrentName == string.Empty ? "\"\"" : ele.CurrentName;
                 ClassName = ele.CurrentClassName;
                 rect = ele.CurrentBoundingRectangle;
                 AutomationId = ele.CurrentAutomationId;
                 RuntimeId = UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId());
-                this.rootId = UIControlAssist.GetRuntimeIdStr(root?.GetRuntimeId());
+                rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
                 curr = ele;
                 this.level = ++level;
-                //if (this.level < 4)
-                //{
-                //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
-                //}
-                //else
-                //{
-                //    // 空元素
-                //    childs = new List<EleInfo>() { new EleInfo() };
-                //}
+                if (this.level < 4)
+                {
+                    childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
+                }
+                else
+                {
+                    // 空元素
+                    childs = new List<EleInfo>() { new EleInfo() };
+                }
                 //TimeLimitedTaskScheduler.factory.StartNew(() =>
                 //{
                 //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
@@ -146,7 +115,7 @@ namespace WpfApp1
                 //task.Start();
                 //Task.Run(() =>
                 //{
-                    childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
+                //childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
                 //});
                 UIControlAssist.map.TryAdd(RuntimeId, this);
             }
@@ -267,35 +236,30 @@ namespace WpfApp1
                     UIA_ControlTypeIds.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
             IUIAutomationElementArray arry = uia.GetRootElement().FindAll(TreeScope.TreeScope_Children, find1_condition);
             //CountdownEvent countdownEvent = new CountdownEvent(arry.Length);
-            //eles.Add(new EleInfo(null, uia.GetRootElement(), -1));
-            //for(int i=0;i< arry.Length; i++)
-            //{
-            //    eles.Add(new EleInfo(uia.GetRootElement(), arry.GetElement(i)));
-            //}
-            eles.Add(new EleInfo(arry.GetElement(1), arry.GetElement(1)));
-            eles.Add(new EleInfo(arry.GetElement(2), arry.GetElement(2)));
-            //countdownEvent.Wait();
-            Task.WaitAll(TaskList.ToArray());
-            allEle = eles;
-            return eles;
-        }
-        public static List<EleInfo> Refresh(string rootId)
-        {
-            List<EleInfo> eles = new List<EleInfo>();
-            CUIAutomation uia = new CUIAutomation();
-            IUIAutomationPropertyCondition find1_condition =
-                   uia.CreatePropertyCondition(UIA_PropertyIds.UIA_ControlTypePropertyId,
-                    UIA_ControlTypeIds.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
-            IUIAutomationElementArray arry = uia.GetRootElement().FindAll(TreeScope.TreeScope_Children, find1_condition);
+            //eles.Add(new EleInfo(uia.GetRootElement(), uia.GetRootElement(), -1));
             for (int i = 0; i < arry.Length; i++)
             {
-                string runtimeId = GetRuntimeIdStr(arry.GetElement(i).GetRuntimeId());
-                if (runtimeId == rootId)
-                {
-                    eles.Add(new EleInfo(arry.GetElement(i),arry.GetElement(i), 0));
-                }
+                eles.Add(new EleInfo(arry.GetElement(i), arry.GetElement(i)));
             }
-            return eles;
+            EleInfo root = new EleInfo(uia.GetRootElement(), -1);
+            root.childs = eles;
+            //eles.Add(new EleInfo(arry.GetElement(1), arry.GetElement(1)));
+            //eles.Add(new EleInfo(arry.GetElement(2), arry.GetElement(2)));
+            //countdownEvent.Wait();
+            //Task.WaitAll(TaskList.ToArray());
+            //allEle = eles;
+            return new List<EleInfo> { root};
+        }
+        public static void Refresh(EleInfo eles)
+        {
+
+            foreach (var item in map.Where(kvp => kvp.Value.rootId == eles.rootId))
+            {
+                EleInfo temp;
+                map.TryRemove(item.Key, out temp);
+            }
+            string v = "";
+
         }
         public static string GetRuntimeIdStr(Array runtimeId)
         {
