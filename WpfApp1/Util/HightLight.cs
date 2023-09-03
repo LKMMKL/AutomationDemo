@@ -85,7 +85,7 @@ namespace WpfApp1.Util
                         IUIAutomationElement ele = uia.ElementFromPoint(tp);
                         if (ele != null)
                         {
-                            DrawHightLight(ele.CurrentBoundingRectangle);
+                            //DrawHightLight(ele.CurrentBoundingRectangle); 暂不启用
                             EleInfo eleinfo;
                             bool r = UIControlAssist.map.TryGetValue(UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId()), out eleinfo);
                             if (r && !actionInvoke)

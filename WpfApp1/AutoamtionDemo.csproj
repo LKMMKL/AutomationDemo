@@ -78,6 +78,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Constants\ControlType.cs" />
     <Compile Include="Constants\Win32API.cs" />
     <Compile Include="UIControlAssist.cs" />
     <Compile Include="Util\HightLight.cs" />
@@ -126,9 +127,6 @@
       <Project>{249a3558-1729-44d4-8f16-dff73cc0f18b}</Project>
       <Name>AutomationLib</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="refresh.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -16,6 +16,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using UIAutomationClient;
+using WpfApp1.Constants;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using Point = System.Drawing.Point;
 
@@ -23,11 +24,24 @@ namespace WpfApp1
 {
     public class EleInfo : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string ClassName { get; set; }
-        public string AutomationId { get; set; }
-        public tagRECT rect { get; set; }
-        public string RuntimeId { get; set; }
+        public string name { get; set; }
+        public string className { get; set; }
+        public string automationId { get; set; }
+        public string runtimeId { get; set; }
+        public string rect
+        {
+            get
+            {
+                return GetRectExpression(curr);
+            }
+            set
+            {
+                rect = value;
+            }
+        }
+        
+        public string type { get; set; }
+        public bool offScreen { get; set; }
         public string rootId;
         public int level { get; set; }
         public List<EleInfo> childs { get; set; }
@@ -73,76 +87,68 @@ namespace WpfApp1
         }
         public EleInfo(IUIAutomationElement root, int level = 0)
         {
-            Name = root.CurrentName;
-            ClassName = root.CurrentClassName;
-            rect = root.CurrentBoundingRectangle;
-            AutomationId = root.CurrentAutomationId;
-            RuntimeId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
+            name = root.CurrentName;
+            className = root.CurrentClassName;
+            automationId = root.CurrentAutomationId;
+            runtimeId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
+            offScreen = root.CurrentIsOffscreen==1?true:false;
+            type = $"{(ControlType)root.CurrentControlType}";
             rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
             curr = root;
+
             this.level = ++level;
         }
         public EleInfo(IUIAutomationElement root,IUIAutomationElement ele, int level=0)
          {
             try
             {   
-                Name = ele.CurrentName == string.Empty ? "\"\"" : ele.CurrentName;
-                ClassName = ele.CurrentClassName;
-                rect = ele.CurrentBoundingRectangle;
-                AutomationId = ele.CurrentAutomationId;
-                RuntimeId = UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId());
+                name = ele.CurrentName == string.Empty ? "\"\"" : ele.CurrentName;
+                className = ele.CurrentClassName;
+                automationId = ele.CurrentAutomationId;
+                runtimeId = UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId());
+                offScreen = ele.CurrentIsOffscreen == 1 ? true : false;
+                type = $"{(ControlType)ele.CurrentControlType}";
                 rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
                 curr = ele;
                 this.level = ++level;
-                if (this.level < 4)
-                {
-                    childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
-                }
-                else
-                {
-                    // 空元素
-                    childs = new List<EleInfo>() { new EleInfo() };
-                }
+                //if (this.level < 4)
+                //{
+                //childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
+                //}
+                //else
+                //{
+                //    // 空元素
+                //    childs = new List<EleInfo>() { new EleInfo() };
+                //}
                 //TimeLimitedTaskScheduler.factory.StartNew(() =>
                 //{
                 //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
                 //});
                 //Task task = new Task(() =>
                 //{
-                //    childs = UIControlAssist.GetAllElementEx(curr, this.level);
+                childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
                 //});
                 //UIControlAssist.TaskList.Add(task);
                 //task.Start();
+                //task.Wait();
                 //Task.Run(() =>
                 //{
                 //childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
                 //});
-                UIControlAssist.map.TryAdd(RuntimeId, this);
+                UIControlAssist.map.TryAdd(runtimeId, this);
             }
             catch(COMException ce) {
             }
-            
-
         }
 
-        public void Retrive()
+        public string GetRectExpression(IUIAutomationElement node)
         {
-            //childs = UIControlAssist.GetAllElementEx(curr, this.level);
-        }
-
-        public tagRECT? ContainPoint(Point point)
-        {
-            tagRECT? tmp = null;
-            if ((point.X > rect.left) && (point.X<rect.right) && (point.Y>rect.top) && (point.Y < rect.bottom))
+            if (node != null)
             {
-                for(int i = 0; i < childs.Count; i++)
-                {
-                    tmp = childs[i].ContainPoint(point);
-                    if (tmp != null) break;
-                }
-                return tmp == null?rect:tmp;
+                tagRECT rect = node.CurrentBoundingRectangle;
+                return $"{rect.left},{rect.top},{rect.right},{rect.bottom}";
             }
-            return tmp;
+            return string.Empty;
         }
     }
     public class UIControlAssist
@@ -229,25 +235,34 @@ namespace WpfApp1
         [STAThread]
         public static List<EleInfo> GetAllElement()
         {
+            DateTime currentTime = DateTime.Now;
             List<EleInfo> eles = new List<EleInfo>();
             CUIAutomation uia = new CUIAutomation();
             IUIAutomationPropertyCondition find1_condition =
                    uia.CreatePropertyCondition(UIA_PropertyIds.UIA_ControlTypePropertyId,
-                    UIA_ControlTypeIds.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
+                    ControlType.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
             IUIAutomationElementArray arry = uia.GetRootElement().FindAll(TreeScope.TreeScope_Children, find1_condition);
             //CountdownEvent countdownEvent = new CountdownEvent(arry.Length);
             //eles.Add(new EleInfo(uia.GetRootElement(), uia.GetRootElement(), -1));
             for (int i = 0; i < arry.Length; i++)
             {
-                eles.Add(new EleInfo(arry.GetElement(i), arry.GetElement(i)));
+                var index = i;
+                Task task = new Task(() =>
+                {
+                    eles.Add(new EleInfo(arry.GetElement(index), arry.GetElement(index)));
+                });
+                TaskList.Add(task);
+                task.Start();
             }
+            Task.WaitAll(TaskList.ToArray());
             EleInfo root = new EleInfo(uia.GetRootElement(), -1);
             root.childs = eles;
             //eles.Add(new EleInfo(arry.GetElement(1), arry.GetElement(1)));
             //eles.Add(new EleInfo(arry.GetElement(2), arry.GetElement(2)));
             //countdownEvent.Wait();
-            //Task.WaitAll(TaskList.ToArray());
-            //allEle = eles;
+           
+            DateTime currentTime1 = DateTime.Now;
+            TimeSpan span =  currentTime1.Subtract(currentTime);
             return new List<EleInfo> { root};
         }
         public static void Refresh(EleInfo eles)
@@ -258,8 +273,6 @@ namespace WpfApp1
                 EleInfo temp;
                 map.TryRemove(item.Key, out temp);
             }
-            string v = "";
-
         }
         public static string GetRuntimeIdStr(Array runtimeId)
         {
@@ -279,7 +292,7 @@ namespace WpfApp1
             CUIAutomation uia = new CUIAutomation();
             IUIAutomationPropertyCondition find1_condition =
                    uia.CreatePropertyCondition(UIA_PropertyIds.UIA_ControlTypePropertyId,
-                    UIA_ControlTypeIds.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
+                    ControlType.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
             
 
             IUIAutomationElementArray arry = ele.FindAll(TreeScope.TreeScope_Children, (new CUIAutomation()).CreateTrueCondition());
@@ -303,9 +316,9 @@ namespace WpfApp1
             dictResult["AccessKey"] = element.CurrentAccessKey;
             dictResult["AriaProperties"] = element.CurrentAriaProperties;
             dictResult["AriaRole"] = element.CurrentAriaRole;
-            dictResult["AutomationId"] = element.CurrentAutomationId;
+            dictResult["automationId"] = element.CurrentAutomationId;
             dictResult["BoundingRectangle"] = element.CurrentBoundingRectangle;
-            dictResult["ClassName"] = element.CurrentClassName;
+            dictResult["className"] = element.CurrentClassName;
             dictResult["ControlType"] = element.CurrentControlType;
             dictResult["Culture"] = element.CurrentCulture;
             dictResult["FrameworkId"] = element.CurrentFrameworkId;

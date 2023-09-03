@@ -53,49 +53,15 @@ namespace WpfApp1
             TreeView treeView = sender as TreeView;
             EleInfo item = (EleInfo)treeView.SelectedItem;
             if (item == null) return;
-            this.eleName.Content = item.Name;
-            this.eleClassName.Content = item.ClassName;
-            this.rootId.Content = item.rootId;
-            this.runtimeId.Content = item.RuntimeId;
-            //tagRECT rect = item.curr.CurrentBoundingRectangle;
-            //HightLight.DrawHightLight(rect);
-        }
-
-        private TreeViewItem GetTreeViewItemFromObject(ItemContainerGenerator container, object tvio)
-        {
-            var item = container.ContainerFromItem(tvio) as TreeViewItem;
-            if (item != null)
-            {
-                return item;
-            }
-
-            for (int i = 0; i < container.Items.Count; i++)
-            {
-
-                var subContainer = (TreeViewItem)container.ContainerFromIndex(i);
-                
-                if (subContainer != null)
-                {
-                    
-                    EleInfo n1 = (EleInfo)subContainer.Header;
-                    if(n1.Name == "\"网易音乐\"")
-                    {
-                        string s = "";
-                    }
-                    if (n1.Name == "网易音乐")
-                    {
-                        string s = "";
-                    }
-                    item = GetTreeViewItemFromObject(subContainer.ItemContainerGenerator, tvio);
-                    if (item != null)
-                    {
-                        return item;
-                    }
-
-                }
-            }
-
-            return null;
+            this.nodeName.Content = item.name;
+            this.nodeClassName.Content = item.className;
+            this.nodeAutomationid.Content = item.automationId;
+            this.nodeRuntimeid.Content = item.runtimeId;
+            this.nodeRect.Content = item.rect;
+            this.nodeType.Content = item.type;
+            this.nodeOffScreen.Content = item.offScreen;
+            tagRECT rect = item.curr.CurrentBoundingRectangle;
+            HightLight.DrawHightLight(rect);
         }
 
         private TreeViewItem GetTreeViewItem(ItemsControl container, object item)
@@ -219,14 +185,14 @@ namespace WpfApp1
 
         private void Refresh(object sender, RoutedEventArgs e)
         {
-            var RuntimeId = ((Button)sender).Tag;
+            var runtimeId = ((Button)sender).Tag;
             EleInfo eles = (EleInfo)tree.Items[0];
             var index = 0;
            
             for(int i = 0; i < eles.childs.Count; i++)
             {
                 index = i;
-                if(eles.childs[i].RuntimeId == RuntimeId)
+                if(eles.childs[i].runtimeId == runtimeId)
                 {
                     
                     break;
@@ -246,7 +212,7 @@ namespace WpfApp1
                 eles.childs.RemoveAt(index);
             }
             
-            //eles.childs.RemoveAll((ele) => ele.RuntimeId == RuntimeId);
+            //eles.childs.RemoveAll((ele) => ele.runtimeId == runtimeId);
             tree.Items.Refresh();
             TreeViewItem ti = tree.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem;
             ti.IsExpanded = true;
