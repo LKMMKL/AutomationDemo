@@ -36,7 +36,7 @@ namespace WpfApp1.Util
                 {
                     using (Graphics g = Graphics.FromHdc(desktop))
                     {
-                        Pen myPen = new Pen(System.Drawing.Color.Red, 5);
+                        Pen myPen = new Pen(System.Drawing.Color.BlueViolet, 2);
                         g.DrawRectangle(myPen, rect);
                         g.Dispose();
                     }
@@ -61,7 +61,7 @@ namespace WpfApp1.Util
         {
             System.Windows.Forms.Timer time = new System.Windows.Forms.Timer();
             time.Tick += Time_Tick;
-            time.Interval = 3000;
+            time.Interval = 1000;
             time.Start();
         }
 
@@ -83,10 +83,12 @@ namespace WpfApp1.Util
                     {
                         CUIAutomation uia = new CUIAutomation();
                         IUIAutomationElement ele = uia.ElementFromPoint(tp);
+                        string name = ele.CurrentName;
                         if (ele != null)
                         {
                             //DrawHightLight(ele.CurrentBoundingRectangle); 暂不启用
                             EleInfo eleinfo;
+                            string v = UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId());
                             bool r = UIControlAssist.map.TryGetValue(UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId()), out eleinfo);
                             if (r && !actionInvoke)
                             {

@@ -241,7 +241,7 @@ namespace WpfApp1
             IUIAutomationPropertyCondition find1_condition =
                    uia.CreatePropertyCondition(UIA_PropertyIds.UIA_ControlTypePropertyId,
                     ControlType.UIA_WindowControlTypeId) as IUIAutomationPropertyCondition;
-            IUIAutomationElementArray arry = uia.GetRootElement().FindAll(TreeScope.TreeScope_Children, find1_condition);
+            IUIAutomationElementArray arry = uia.GetRootElement().FindAll(TreeScope.TreeScope_Children, (new CUIAutomation()).CreateTrueCondition());
             //CountdownEvent countdownEvent = new CountdownEvent(arry.Length);
             //eles.Add(new EleInfo(uia.GetRootElement(), uia.GetRootElement(), -1));
             for (int i = 0; i < arry.Length; i++)
