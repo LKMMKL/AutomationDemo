@@ -201,8 +201,11 @@ namespace WpfApp1
             }
             EleInfo target = eles.childs[index];
             //eles.childs.RemoveAt(index);
+            Task.Run(() => {
+                target = new EleInfo(target.curr, target.curr, 0);
+            }).Wait();
             UIControlAssist.Refresh(target);
-            target = new EleInfo(target.curr,target.curr, 0);
+            
             if (target.curr != null)
             {
                 eles.childs[index] = target;
@@ -216,13 +219,6 @@ namespace WpfApp1
             tree.Items.Refresh();
             TreeViewItem ti = tree.ItemContainerGenerator.ContainerFromIndex(0) as TreeViewItem;
             ti.IsExpanded = true;
-            //list[0].childs.RemoveAll((ele) => ele.rootId == rootId);
-            //tree.ItemsSource = null;
-            //tree.ItemsSource = list;
-            //var list1 = UIControlAssist.Refresh((string)rootId);
-            //tree.ItemsSource = null;
-            //tree.ItemsSource= list;
-            //PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(list)));
         }
     }
 }
