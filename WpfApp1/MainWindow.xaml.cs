@@ -201,11 +201,11 @@ namespace WpfApp1
 
             }
             EleInfo target = eles.childs[index];
-            //eles.childs.RemoveAt(index);
+            UIControlAssist.Refresh(target);
             Task.Run(() => {
                 target = new EleInfo(target.curr, target.curr, 0);
             }).Wait();
-            UIControlAssist.Refresh(target);
+            
             
             if (target.curr != null)
             {
