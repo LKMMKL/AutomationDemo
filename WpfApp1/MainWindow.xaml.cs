@@ -36,6 +36,7 @@ namespace WpfApp1
         {
             InitializeComponent();
 
+            this.Topmost= true;
             this.DataContext = this;
             list = UIControlAssist.GetAllElement();
             HightLight.mouseFunc = MouseSelect;

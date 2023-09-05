@@ -24,10 +24,19 @@ namespace WpfApp1
 {
     public class EleInfo : INotifyPropertyChanged
     {
-        public string name { get; set; }
-        public string className { get; set; }
-        public string automationId { get; set; }
-        public string runtimeId { get; set; }
+        public string name
+        {
+            get { return curr.CurrentName; }
+            set { }
+        }
+        public string className {
+            get { return curr.CurrentClassName; }
+            set { }
+        }
+        public string automationId {
+            get { return curr.CurrentAutomationId; }
+            set { }
+        }
         public string rect
         {
             get
@@ -40,8 +49,17 @@ namespace WpfApp1
             }
         }
         
-        public string type { get; set; }
-        public bool offScreen { get; set; }
+        public string type
+        {
+            get { return $"{(ControlType)curr.CurrentControlType}"; }
+            set { }
+        }
+        public bool offScreen
+        {
+            get { return curr.CurrentIsOffscreen == 1 ? true : false; }
+            set { }
+        }
+        public string runtimeId { get; set; }
         public string rootId;
         public int level { get; set; }
         public List<EleInfo> childs { get; set; }
@@ -87,12 +105,12 @@ namespace WpfApp1
         }
         public EleInfo(IUIAutomationElement root, int level = 0)
         {
-            name = root.CurrentName;
-            className = root.CurrentClassName;
-            automationId = root.CurrentAutomationId;
+            //name = root.CurrentName;
+            //className = root.CurrentClassName;
+            //automationId = root.CurrentAutomationId;
             runtimeId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
-            offScreen = root.CurrentIsOffscreen==1?true:false;
-            type = $"{(ControlType)root.CurrentControlType}";
+            //offScreen = root.CurrentIsOffscreen==1?true:false;
+            //type = $"{(ControlType)root.CurrentControlType}";
             rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
             curr = root;
 
@@ -102,12 +120,12 @@ namespace WpfApp1
          {
             try
             {   
-                name = ele.CurrentName == string.Empty ? "\"\"" : ele.CurrentName;
-                className = ele.CurrentClassName;
-                automationId = ele.CurrentAutomationId;
+                //name = ele.CurrentName == string.Empty ? "\"\"" : ele.CurrentName;
+                //className = ele.CurrentClassName;
+                //automationId = ele.CurrentAutomationId;
                 runtimeId = UIControlAssist.GetRuntimeIdStr(ele.GetRuntimeId());
-                offScreen = ele.CurrentIsOffscreen == 1 ? true : false;
-                type = $"{(ControlType)ele.CurrentControlType}";
+                //offScreen = ele.CurrentIsOffscreen == 1 ? true : false;
+                //type = $"{(ControlType)ele.CurrentControlType}";
                 rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
                 curr = ele;
                 this.level = ++level;
@@ -143,11 +161,15 @@ namespace WpfApp1
 
         public string GetRectExpression(IUIAutomationElement node)
         {
-            if (node != null)
-            {
-                tagRECT rect = node.CurrentBoundingRectangle;
-                return $"{rect.left},{rect.top},{rect.right},{rect.bottom}";
+            try {
+                if (node != null && (node.CurrentIsOffscreen==0))
+                {
+                    tagRECT rect = node.CurrentBoundingRectangle;
+                    tagRECT rect1 = node.CurrentBoundingRectangle;
+                    return $"{rect.left},{rect.top},{rect.right},{rect.bottom}";
+                }
             }
+            catch(COMException ce) { }
             return string.Empty;
         }
     }
