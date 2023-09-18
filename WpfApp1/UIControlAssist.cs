@@ -129,10 +129,10 @@ namespace WpfApp1
                 rootId = UIControlAssist.GetRuntimeIdStr(root.GetRuntimeId());
                 curr = ele;
                 this.level = ++level;
-                //if (this.level < 4)
-                //{
-                //childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
-                //}
+                if (this.level < 4)
+                {
+                    childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
+                }
                 //else
                 //{
                 //    // 空元素
@@ -144,7 +144,7 @@ namespace WpfApp1
                 //});
                 //Task task = new Task(() =>
                 //{
-                childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
+                //childs = UIControlAssist.GetAllElementEx(root, curr, this.level);
                 //});
                 //UIControlAssist.TaskList.Add(task);
                 //task.Start();
@@ -255,7 +255,7 @@ namespace WpfApp1
 
         public static List<EleInfo> allEle = new List<EleInfo>();
         [STAThread]
-        public static List<EleInfo> GetAllElement()
+        public static List<EleInfo> GetDesktop()
         {
             DateTime currentTime = DateTime.Now;
             List<EleInfo> eles = new List<EleInfo>();

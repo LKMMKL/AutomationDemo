@@ -38,7 +38,7 @@ namespace WpfApp1
 
             this.Topmost= true;
             this.DataContext = this;
-            list = UIControlAssist.GetAllElement();
+            list = UIControlAssist.GetDesktop();
             HightLight.mouseFunc = MouseSelect;
            
         }
@@ -54,13 +54,13 @@ namespace WpfApp1
             TreeView treeView = sender as TreeView;
             EleInfo item = (EleInfo)treeView.SelectedItem;
             if (item == null) return;
-            this.nodeName.Content = item.name;
-            this.nodeClassName.Content = item.className;
-            this.nodeAutomationid.Content = item.automationId;
-            this.nodeRuntimeid.Content = item.runtimeId;
-            this.nodeRect.Content = item.rect;
-            this.nodeType.Content = item.type;
-            this.nodeOffScreen.Content = item.offScreen;
+            this.nodeName.Text = item.name;
+            this.nodeClassName.Text = item.className;
+            this.nodeAutomationid.Text = item.automationId;
+            this.nodeRuntimeid.Text = item.runtimeId;
+            this.nodeRect.Text = item.rect;
+            this.nodeType.Text = item.type;
+            this.nodeOffScreen.Text = item.offScreen.ToString();
             tagRECT rect = item.curr.CurrentBoundingRectangle;
             HightLight.DrawHightLight(rect);
         }

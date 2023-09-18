@@ -117,7 +117,7 @@ namespace WpfApp1
             DataTemplate t = new DataTemplate();
             Task.Run(() =>
             {
-                //list = UIControlAssist.GetAllElement();
+                //list = UIControlAssist.GetDesktop();
                 //w.Dispatcher.Invoke(() =>
                 //{
                 //    w.tree.ItemsSource = list;
